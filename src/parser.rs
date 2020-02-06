@@ -127,5 +127,4 @@ mod tests {
             str.chars().flat_map(Movement::lookup).collect()
         }
     }
-
 }

@@ -3,11 +3,11 @@ mod parser;
 mod robot;
 
 use anyhow::Result;
+use journey::Journey;
+use robot::RobotState;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use robot::RobotState;
-use journey::Journey;
 
 #[derive(Debug, StructOpt)]
 pub struct Settings {
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
 
     match parser::journeys(&input) {
         Err(err) => eprintln!("Problem inside the journeys file: {}", err),
-        Ok((_text, journeys)) => { 
+        Ok((_text, journeys)) => {
             let end_states: Vec<RobotState> = simulate(journeys);
             println!("{:?}", end_states);
             // for (journey, run) in journeys.iter().zip(robot::run)

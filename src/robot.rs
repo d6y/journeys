@@ -1,5 +1,4 @@
-use super::journey::{Movement, Journey};
-
+use super::journey::{Journey, Movement};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Direction {
@@ -38,10 +37,22 @@ pub struct Location {
 impl Location {
     fn step(self, dir: Direction) -> Location {
         match dir {
-            Direction::N => Location { y: self.y + 1, ..self },
-            Direction::S => Location { y: self.y - 1, ..self },
-            Direction::E => Location { y: self.x + 1, ..self },
-            Direction::W => Location { y: self.x - 1, ..self },
+            Direction::N => Location {
+                y: self.y + 1,
+                ..self
+            },
+            Direction::S => Location {
+                y: self.y - 1,
+                ..self
+            },
+            Direction::E => Location {
+                y: self.x + 1,
+                ..self
+            },
+            Direction::W => Location {
+                y: self.x - 1,
+                ..self
+            },
         }
     }
 }
@@ -62,12 +73,20 @@ impl RobotState {
 
     fn step(self, movement: Movement) -> RobotState {
         match movement {
-            Movement::F => RobotState { at: self.at.step(self.facing.clone()), ..self },
-            Movement::L => RobotState { facing: self.facing.left(), ..self },
-            Movement::R => RobotState { facing: self.facing.right(), ..self },
+            Movement::F => RobotState {
+                at: self.at.step(self.facing.clone()),
+                ..self
+            },
+            Movement::L => RobotState {
+                facing: self.facing.left(),
+                ..self
+            },
+            Movement::R => RobotState {
+                facing: self.facing.right(),
+                ..self
+            },
         }
-
-    } 
+    }
 }
 
 pub fn run(journey: &Journey) -> RobotState {
@@ -76,7 +95,6 @@ pub fn run(journey: &Journey) -> RobotState {
         facing: journey.start.facing.clone(),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
