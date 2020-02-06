@@ -1,115 +1,17 @@
 use nom;
-use nom::character::complete::digit1;
-use nom::character::complete::newline;
-use nom::character::complete::one_of;
-use nom::character::complete::space1;
-use nom::combinator::map_res;
-use nom::combinator::opt;
-use nom::multi::many0;
-use nom::multi::separated_list;
-use nom::sequence::separated_pair;
-use nom::sequence::tuple;
+use nom::character::complete::{digit1, newline, one_of, space1};
+use nom::combinator::{map_res, opt};
+use nom::multi::{many0, separated_list};
+use nom::sequence::{separated_pair, tuple};
 use nom::IResult;
 
 use std::num::ParseIntError;
 
-#[derive(Debug, PartialEq)]
-enum Direction {
-    N,
-    E,
-    S,
-    W,
-}
+use super::journey::{Journey, Movement};
+use super::robot::{Direction, Location, RobotState};
 
-struct UnrecognizedDirection;
-
-impl Direction {
-    fn from(ch: char) -> Result<Direction, UnrecognizedDirection> {
-        match ch {
-            'N' => Ok(Direction::N),
-            'E' => Ok(Direction::E),
-            'S' => Ok(Direction::S),
-            'W' => Ok(Direction::W),
-            _ => Err(UnrecognizedDirection),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-struct Location {
-    x: u16,
-    y: u16,
-}
-
-impl Location {
-    fn from(x: &str, y: &str) -> Result<Location, ParseIntError> {
-        let x: u16 = x.parse()?;
-        let y: u16 = y.parse()?;
-        Ok(Location { x, y })
-    }
-}
-
-#[derive(Debug, PartialEq)]
-struct RobotState {
-    at: Location,
-    facing: Direction,
-}
-
-impl RobotState {
-    fn new(x: u16, y: u16, facing: Direction) -> RobotState {
-        RobotState {
-            at: Location { x, y },
-            facing,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-struct Journey {
-    start: RobotState,
-    moves: Vec<Movement>,
-    end: RobotState,
-}
-
-#[derive(Debug, PartialEq)]
-enum Movement {
-    F,
-    R,
-    L,
-}
-
-struct UnrecognizedMovement;
-
-impl Movement {
-    fn lookup(ch: char) -> Result<Movement, UnrecognizedMovement> {
-        match ch {
-            'F' => Ok(Movement::F),
-            'R' => Ok(Movement::R),
-            'L' => Ok(Movement::L),
-            _ => Err(UnrecognizedMovement),
-        }
-    }
-
-    fn from(str: &str) -> Vec<Movement> {
-        str.chars().flat_map(Movement::lookup).collect()
-    }
-}
-
-fn robot_state(input: &str) -> IResult<&str, RobotState> {
-    // Basic parsing
-    let direction = map_res(one_of("NESW"), Direction::from);
-    let location = map_res(separated_pair(digit1, space1, digit1), |(x, y)| {
-        Location::from(x, y)
-    });
-
-    let grammar = tuple((location, space1, direction));
-
-    let (remainder, (at, _, facing)) = grammar(input)?;
-    Ok((remainder, RobotState { at, facing }))
-}
-
-fn movements(input: &str) -> IResult<&str, Vec<Movement>> {
-    many0(map_res(one_of("LRF"), Movement::lookup))(input)
+pub fn journeys(input: &str) -> IResult<&str, Vec<Journey>> {
+    separated_list(newline, journey)(input)
 }
 
 fn journey(input: &str) -> IResult<&str, Journey> {
@@ -126,13 +28,61 @@ fn journey(input: &str) -> IResult<&str, Journey> {
     Ok((remainder, Journey { start, moves, end }))
 }
 
-fn journeys(input: &str) -> IResult<&str, Vec<Journey>> {
-    separated_list(newline, journey)(input)
+fn robot_state(input: &str) -> IResult<&str, RobotState> {
+    let direction = map_res(one_of("NESW"), Direction::from);
+    let location = map_res(separated_pair(digit1, space1, digit1), |(x, y)| {
+        Location::from(x, y)
+    });
+
+    let grammar = tuple((location, space1, direction));
+
+    let (remainder, (at, _, facing)) = grammar(input)?;
+    Ok((remainder, RobotState { at, facing }))
+}
+
+fn movements(input: &str) -> IResult<&str, Vec<Movement>> {
+    many0(map_res(one_of("LRF"), Movement::lookup))(input)
+}
+
+struct UnrecognizedDirection;
+
+impl Direction {
+    fn from(ch: char) -> Result<Direction, UnrecognizedDirection> {
+        match ch {
+            'N' => Ok(Direction::N),
+            'E' => Ok(Direction::E),
+            'S' => Ok(Direction::S),
+            'W' => Ok(Direction::W),
+            _ => Err(UnrecognizedDirection),
+        }
+    }
+}
+
+impl Location {
+    fn from(x: &str, y: &str) -> Result<Location, ParseIntError> {
+        let x: u16 = x.parse()?;
+        let y: u16 = y.parse()?;
+        Ok(Location { x, y })
+    }
+}
+
+struct UnrecognizedMovement;
+
+impl Movement {
+    fn lookup(ch: char) -> Result<Movement, UnrecognizedMovement> {
+        match ch {
+            'F' => Ok(Movement::F),
+            'R' => Ok(Movement::R),
+            'L' => Ok(Movement::L),
+            _ => Err(UnrecognizedMovement),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn parse_robot_state() {
         let at = Location { x: 1, y: 2 };
@@ -170,5 +120,20 @@ mod tests {
 
         let num_journeys = actual.map(|(_, js)| js.len());
         assert_eq!(num_journeys, Ok(3));
+    }
+
+    impl Movement {
+        fn from(str: &str) -> Vec<Movement> {
+            str.chars().flat_map(Movement::lookup).collect()
+        }
+    }
+
+    impl RobotState {
+        fn new(x: u16, y: u16, facing: Direction) -> RobotState {
+            RobotState {
+                at: Location { x, y },
+                facing,
+            }
+        }
     }
 }
