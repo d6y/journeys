@@ -128,12 +128,4 @@ mod tests {
         }
     }
 
-    impl RobotState {
-        fn new(x: u16, y: u16, facing: Direction) -> RobotState {
-            RobotState {
-                at: Location { x, y },
-                facing,
-            }
-        }
-    }
 }

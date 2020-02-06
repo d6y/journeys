@@ -6,6 +6,8 @@ use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use robot::RobotState;
+use journey::Journey;
 
 #[derive(Debug, StructOpt)]
 pub struct Settings {
@@ -15,12 +17,17 @@ pub struct Settings {
 
 fn main() -> Result<()> {
     let settings = Settings::from_args();
-
     let input = fs::read_to_string(settings.file)?;
+
+    let simulate = |journeys: Vec<Journey>| journeys.iter().map(robot::run).collect();
 
     match parser::journeys(&input) {
         Err(err) => eprintln!("Problem inside the journeys file: {}", err),
-        Ok((_text, journeys)) => println!("{:?}", journeys),
+        Ok((_text, journeys)) => { 
+            let end_states: Vec<RobotState> = simulate(journeys);
+            println!("{:?}", end_states);
+            // for (journey, run) in journeys.iter().zip(robot::run)
+        }
     }
 
     Ok(())
