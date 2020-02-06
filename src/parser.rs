@@ -6,9 +6,10 @@ use nom::character::complete::space1;
 use nom::combinator::map_res;
 use nom::combinator::opt;
 use nom::multi::many0;
+use nom::multi::separated_list;
 use nom::sequence::separated_pair;
 use nom::sequence::tuple;
-use nom::*;
+use nom::IResult;
 
 use std::num::ParseIntError;
 
@@ -125,6 +126,10 @@ fn journey(input: &str) -> IResult<&str, Journey> {
     Ok((remainder, Journey { start, moves, end }))
 }
 
+fn journeys(input: &str) -> IResult<&str, Vec<Journey>> {
+    separated_list(newline, journey)(input)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,5 +161,14 @@ mod tests {
         };
 
         assert_eq!(journey(input), Ok(("", expected)));
+    }
+
+    #[test]
+    fn parse_journeys() {
+        let input = include_str!("../input.txt");
+        let actual = journeys(input);
+
+        let num_journeys = actual.map(|(_, js)| js.len());
+        assert_eq!(num_journeys, Ok(3));
     }
 }
