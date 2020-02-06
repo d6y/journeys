@@ -1,11 +1,9 @@
 use super::journey::{Journey, Movement};
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Direction {
-    N,
-    E,
-    S,
-    W,
+pub struct RobotState {
+    pub at: Location,
+    pub facing: Direction,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -15,11 +13,18 @@ pub struct Location {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct RobotState {
-    pub at: Location,
-    pub facing: Direction,
+pub enum Direction {
+    N,
+    E,
+    S,
+    W,
 }
 
+// This is the plan for working out the end state of a robot:
+// 1. Imagine we have a function that can take one step: given a robot state and a move (like forward),
+//    it can calculate a new robot state.
+// 2. With that, we take the starting point and for each move crank the step function to compute each new state.
+//    That's the `fold` function on a collection.
 pub fn run(journey: &Journey) -> RobotState {
     let step = |state: RobotState, movement| state.step(movement);
     journey.moves.iter().fold(journey.start.clone(), step)
@@ -34,6 +39,7 @@ impl RobotState {
         }
     }
 
+    // Take one step
     fn step(self, movement: &Movement) -> RobotState {
         match *movement {
             Movement::F => RobotState {
