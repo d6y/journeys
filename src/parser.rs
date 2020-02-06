@@ -66,19 +66,6 @@ impl Location {
     }
 }
 
-struct UnrecognizedMovement;
-
-impl Movement {
-    fn lookup(ch: char) -> Result<Movement, UnrecognizedMovement> {
-        match ch {
-            'F' => Ok(Movement::F),
-            'R' => Ok(Movement::R),
-            'L' => Ok(Movement::L),
-            _ => Err(UnrecognizedMovement),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,11 +107,5 @@ mod tests {
 
         let num_journeys = actual.map(|(_, js)| js.len());
         assert_eq!(num_journeys, Ok(3));
-    }
-
-    impl Movement {
-        fn from(str: &str) -> Vec<Movement> {
-            str.chars().flat_map(Movement::lookup).collect()
-        }
     }
 }
