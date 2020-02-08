@@ -1,10 +1,8 @@
-mod journey;
 mod parser;
 mod robot;
 
 use anyhow::Result;
-use journey::Journey;
-use robot::RobotState;
+use robot::{Journey, RobotState};
 use std::fs;
 use std::path::PathBuf;
 use structopt::StructOpt;

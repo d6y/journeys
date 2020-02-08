@@ -1,4 +1,16 @@
-use super::journey::{Journey, Movement};
+#[derive(Debug, PartialEq)]
+pub struct Journey {
+    pub start: RobotState,
+    pub moves: Vec<Movement>,
+    pub end: RobotState,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Movement {
+    F,
+    R,
+    L,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct RobotState {
@@ -56,7 +68,6 @@ pub fn run(journey: &Journey) -> RobotState {
 
     journey.moves.iter().fold(journey.start.clone(), step)
 }
-
 
 #[cfg(test)]
 mod tests {

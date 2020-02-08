@@ -7,8 +7,7 @@ use nom::IResult;
 
 use std::num::ParseIntError;
 
-use super::journey::{Journey, Movement};
-use super::robot::{Direction, Location, RobotState};
+use super::robot::{Direction, Journey, Location, Movement, RobotState};
 
 pub fn journeys(input: &str) -> IResult<&str, Vec<Journey>> {
     separated_list(newline, journey)(input)
@@ -60,7 +59,28 @@ impl Direction {
 
 impl Location {
     fn from(x: &str, y: &str) -> Result<Location, ParseIntError> {
-        Ok(Location { x: x.parse()?, y: y.parse()? })
+        Ok(Location {
+            x: x.parse()?,
+            y: y.parse()?,
+        })
+    }
+}
+
+pub struct UnrecognizedMovement;
+
+impl Movement {
+    pub fn lookup(ch: char) -> Result<Movement, UnrecognizedMovement> {
+        match ch {
+            'F' => Ok(Movement::F),
+            'R' => Ok(Movement::R),
+            'L' => Ok(Movement::L),
+            _ => Err(UnrecognizedMovement),
+        }
+    }
+
+    #[cfg(test)]
+    pub fn from(str: &str) -> Vec<Movement> {
+        str.chars().flat_map(Movement::lookup).collect()
     }
 }
 
