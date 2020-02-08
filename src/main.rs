@@ -40,7 +40,7 @@ fn main() -> Result<()> {
             let end_states: Vec<RobotState> = simulate(&journeys);
             report(&journeys, &end_states);
         }
-        Ok((text, _)) => eprintln!("Could read whole journeys file. Left with: {}", text),
+        Ok((text, _)) => eprintln!("Could not read whole journeys file. Left with: {}", text),
         Err(err) => eprintln!("Problem inside the journeys file: {}", err),
     }
 
