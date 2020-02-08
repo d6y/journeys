@@ -6,10 +6,19 @@ pub struct RobotState {
     pub facing: Direction,
 }
 
+impl RobotState {
+    pub fn new(x: i16, y: i16, facing: Direction) -> RobotState {
+        RobotState {
+            at: Location { x, y },
+            facing,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Location {
-    pub x: u16,
-    pub y: u16,
+    pub x: i16,
+    pub y: i16,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -48,14 +57,6 @@ pub fn run(journey: &Journey) -> RobotState {
     journey.moves.iter().fold(journey.start.clone(), step)
 }
 
-impl RobotState {
-    pub fn new(x: u16, y: u16, facing: Direction) -> RobotState {
-        RobotState {
-            at: Location { x, y },
-            facing,
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

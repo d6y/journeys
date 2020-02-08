@@ -60,9 +60,7 @@ impl Direction {
 
 impl Location {
     fn from(x: &str, y: &str) -> Result<Location, ParseIntError> {
-        let x: u16 = x.parse()?;
-        let y: u16 = y.parse()?;
-        Ok(Location { x, y })
+        Ok(Location { x: x.parse()?, y: y.parse()? })
     }
 }
 
