@@ -37,13 +37,13 @@ Journey 1 👍
 Journey 2 👍
 ```
 
-You can also run the programe with `--help`.
+You can also run the program with `--help`.
 
 # My implementation
 
 Most of the logic is in _robot.rs_. There are some tests: `cargo test`.
 
-I used this as an excuse to try out the parser combinator libray (nom) for the first time.
+I used this as an excuse to try out the parser combinator library (nom) for the first time.
 That's in `parser.rs`.
 
 
