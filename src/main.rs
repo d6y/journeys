@@ -33,13 +33,18 @@ fn main() -> Result<()> {
         }
     };
 
+    use nom::error::convert_error;
+    use nom::Err::{Error, Failure, Incomplete};
+
     match parser::journeys(&input) {
         Ok(("", journeys)) => {
             let end_states: Vec<RobotState> = simulate(&journeys);
             report(&journeys, &end_states);
         }
         Ok((text, _)) => eprintln!("Could not read whole journeys file. Left with: {}", text),
-        Err(err) => eprintln!("Problem inside the journeys file: {}", err),
+        Err(Failure(err)) => eprintln!("Unrecoverable error: {}", convert_error(&input, err)),
+        Err(Error(err)) => eprintln!("Error: {}", convert_error(&input, err)),
+        Err(Incomplete(err)) => eprintln!("Not enough data: {:?}", err),
     }
 
     Ok(())

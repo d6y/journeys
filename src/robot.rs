@@ -72,12 +72,13 @@ pub fn run(journey: &Journey) -> RobotState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use Movement::{F, R};
 
     #[test]
     fn follow_journey_up_and_right() {
         let start = RobotState::new(0, 0, Direction::N);
         let end = RobotState::new(1, 1, Direction::E);
-        let moves = Movement::from("FRF");
+        let moves = vec![F, R, F];
         let journey = Journey { start, moves, end };
         assert_eq!(run(&journey), journey.end);
     }
@@ -86,7 +87,7 @@ mod tests {
     fn follow_journey_round_the_block() {
         let start = RobotState::new(1, 1, Direction::E);
         let end = RobotState::new(1, 1, Direction::E);
-        let moves = Movement::from("RFRFRFRF");
+        let moves = vec![R, F, R, F, R, F, R, F];
         let journey = Journey { start, moves, end };
         assert_eq!(run(&journey), journey.end);
     }

@@ -1,60 +1,62 @@
 use nom;
 use nom::character::complete::{digit1, newline, one_of, space1};
-use nom::combinator::{map_res, opt};
-use nom::multi::{many0, separated_list};
+use nom::combinator::{all_consuming, cut, map, map_res, opt};
+use nom::multi::{many1, separated_list};
 use nom::sequence::{separated_pair, tuple};
-use nom::IResult;
 
 use std::num::ParseIntError;
 
 use super::robot::{Direction, Journey, Location, Movement, RobotState};
 
-pub fn journeys(input: &str) -> IResult<&str, Vec<Journey>> {
-    separated_list(newline, journey)(input)
+type Res<'a, T> = nom::IResult<&'a str, T, nom::error::VerboseError<&'a str>>;
+
+pub fn journeys(input: &str) -> Res<Vec<Journey>> {
+    all_consuming(separated_list(newline, journey))(input)
 }
 
-fn journey(input: &str) -> IResult<&str, Journey> {
-    let grammar = tuple((
+fn journey(input: &str) -> Res<Journey> {
+    let movement = map(one_of("FRL"), |ch| match ch {
+        'F' => Movement::F,
+        'R' => Movement::R,
+        'L' => Movement::L,
+        _ => unreachable!(),
+    });
+
+    // NB: `cut` prevents backtracking.
+    // This gives a more precise error for an unrecognized movement.
+    let movements = cut(many1(movement));
+
+    let sequence = (
         robot_state,
         newline,
         movements,
         newline,
         robot_state,
         opt(newline),
-    ));
-
-    let (remainder, (start, _, moves, _, end, _)) = grammar(input)?;
-    Ok((remainder, Journey { start, moves, end }))
+    );
+    map(tuple(sequence), |(start, _, moves, _, end, _)| Journey {
+        start,
+        moves,
+        end,
+    })(input)
 }
 
-fn robot_state(input: &str) -> IResult<&str, RobotState> {
-    let direction = map_res(one_of("NESW"), Direction::from);
+fn robot_state(input: &str) -> Res<RobotState> {
+    let direction = cut(map(one_of("NESW"), |ch| match ch {
+        'N' => Direction::N,
+        'E' => Direction::E,
+        'S' => Direction::S,
+        'W' => Direction::W,
+        _ => unreachable!(),
+    }));
+
     let location = map_res(separated_pair(digit1, space1, digit1), |(x, y)| {
         Location::from(x, y)
     });
 
-    let grammar = tuple((location, space1, direction));
+    let sequence = (location, space1, direction);
 
-    let (remainder, (at, _, facing)) = grammar(input)?;
-    Ok((remainder, RobotState { at, facing }))
-}
-
-fn movements(input: &str) -> IResult<&str, Vec<Movement>> {
-    many0(map_res(one_of("LRF"), Movement::lookup))(input)
-}
-
-struct UnrecognizedDirection;
-
-impl Direction {
-    fn from(ch: char) -> Result<Direction, UnrecognizedDirection> {
-        match ch {
-            'N' => Ok(Direction::N),
-            'E' => Ok(Direction::E),
-            'S' => Ok(Direction::S),
-            'W' => Ok(Direction::W),
-            _ => Err(UnrecognizedDirection),
-        }
-    }
+    map(tuple(sequence), |(at, _, facing)| RobotState { at, facing })(input)
 }
 
 impl Location {
@@ -63,24 +65,6 @@ impl Location {
             x: x.parse()?,
             y: y.parse()?,
         })
-    }
-}
-
-pub struct UnrecognizedMovement;
-
-impl Movement {
-    pub fn lookup(ch: char) -> Result<Movement, UnrecognizedMovement> {
-        match ch {
-            'F' => Ok(Movement::F),
-            'R' => Ok(Movement::R),
-            'L' => Ok(Movement::L),
-            _ => Err(UnrecognizedMovement),
-        }
-    }
-
-    #[cfg(test)]
-    pub fn from(str: &str) -> Vec<Movement> {
-        str.chars().flat_map(Movement::lookup).collect()
     }
 }
 
@@ -96,22 +80,17 @@ mod tests {
     }
 
     #[test]
-    fn parse_movements() {
-        let input = "FRRFLFFL";
-        let expected = Movement::from(input);
-        assert_eq!(expected.len(), 8);
-        assert_eq!(movements(input), Ok(("", expected)));
-    }
-
-    #[test]
     fn parse_journey() {
         let input = "0 3 W\n\
             LLFFFLFLFL\n\
             2 4 S";
 
+        use Movement::{F, L};
+        let moves = vec![L, L, F, F, F, L, F, L, F, L];
+
         let expected = Journey {
             start: RobotState::new(0, 3, Direction::W),
-            moves: Movement::from("LLFFFLFLFL"),
+            moves,
             end: RobotState::new(2, 4, Direction::S),
         };
 
